@@ -7,8 +7,8 @@ import java.util.*;
 import java.io.*;
 
 /**
- * Code to test Project 3
+ * Code to test Project 4
  */
-public class tester {
+public class test {
 
 }
