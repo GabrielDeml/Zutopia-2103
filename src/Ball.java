@@ -1,4 +1,3 @@
-import java.awt.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
@@ -62,5 +61,19 @@ public class Ball {
 
 		circle.setTranslateX(x - (circle.getLayoutX() + BALL_RADIUS));
 		circle.setTranslateY(y - (circle.getLayoutY() + BALL_RADIUS));
+	}
+
+	/**
+	 * Reverses the ball's y velocity
+	 */
+	public void reverseYVelocity() {
+		vy *= -1;
+	}
+
+	/**
+	 * Reverses the ball's x velocity
+	 */
+	public void reverseXVelocity() {
+		vx *= -1;
 	}
 }
