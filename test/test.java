@@ -14,7 +14,7 @@ public class test {
     public void testSounds() {
      model test = new model();
      System.out.println(test.p1);
-     System.out.println(test.p2);
+//     System.out.println(test.p2);
 //     test.sound.play();
 //     test.loadAudio();
 //     test.playAudio("bleat");
