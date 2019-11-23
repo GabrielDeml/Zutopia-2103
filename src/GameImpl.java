@@ -84,7 +84,6 @@ public class GameImpl extends Pane implements Game {
         return this;
     }
 
-
 //    private void loadImages() {
 //        for (String n : ImagesToLoad) {
 //
@@ -130,38 +129,40 @@ public class GameImpl extends Pane implements Game {
         getChildren().removeAll(animalImages);
         animalImages = new LinkedList<>();
         for (int i = 0; i < ANIMALS_TO_START; ++i) {
+            // Load image from disk
             final String animalImageFilename = ANIMAL_IMAGES[i % ANIMAL_IMAGES.length];
             final Image image = new Image(this.getClass().getResourceAsStream(animalImageFilename));
             final Label imageLabel = new Label("", new ImageView(image));
+            // Calculate position to place to image
+            // xFactor represents at what percent of the screen's width the image should be placed
             final double xFactor = (double) ((i % ANIMALS_PER_ROW) + 1) / (ANIMALS_PER_ROW + 1);
             final double xPos = xFactor * WIDTH - (image.getWidth() / 2);
-            final double yFactor = (double) (i / ANIMALS_PER_ROW) + 0.5;
-            final double yPos = yFactor * ANIMAL_IMAGE_Y_SEPARATION - (image.getHeight() / 2);
+            // (i / ANIMALS_PER_ROW) finds the proper row to place the image in (due to integer division)
+            final double yPos = (double) (i / ANIMALS_PER_ROW) * ANIMAL_IMAGE_Y_SEPARATION + (image.getHeight() / 2);
             imageLabel.setLayoutX(xPos);
             imageLabel.setLayoutY(yPos);
-            getChildren().add(imageLabel);
-            animalImages.add(imageLabel);
+            getChildren().add(imageLabel); // add image to pane
+            animalImages.add(imageLabel); // add image to list of animals
         }
     }
 
     /**
      * Restarts/starts the game
+     *
      * @param state the state of last game, if applicable (NEW if a new game)
      */
     private void restartGame(GameState state) {
         getChildren().clear();  // remove all components from the game
         bottomScreenHitCounter = 0; // reset hits on bottom
-        resetAnimalImages(); // resets all the animal images
         ball = new Ball();
         getChildren().add(ball.getCircle());  // Add the ball to the game board
         paddle = new Paddle();
         getChildren().add(paddle.getRectangle());  // Add the paddle to the game board
-
         // Add start message
         final String message;
         switch (state) {
             case LOST:
-                message = "Game Over with " + animalImages.size() + " animals left\n";
+                message = "Game Over with " + animalImages.size() + " animal(s) left\n";
                 break;
             case WON:
                 message = "You won!\n";
@@ -173,7 +174,7 @@ public class GameImpl extends Pane implements Game {
         startLabel.setLayoutX((double) WIDTH / 2 - 50);
         startLabel.setLayoutY((double) HEIGHT / 2 + 100);
         getChildren().add(startLabel);
-
+        resetAnimalImages(); // resets all the animal images
         // Add event handler to start the game
         setOnMouseClicked(e -> {
             GameImpl.this.setOnMouseClicked(null);
@@ -181,7 +182,6 @@ public class GameImpl extends Pane implements Game {
             getChildren().remove(startLabel);
             run();
         });
-
         // Add another event handler to steer paddle
         setOnMouseMoved(mouseEvent -> paddle.moveTo(mouseEvent.getX(), mouseEvent.getY()));
     }
@@ -224,38 +224,29 @@ public class GameImpl extends Pane implements Game {
         ball.updatePosition(deltaNanoTime);
         final Bounds ballBounds = ball.getCircle().getBoundsInParent(),
                 paddleBounds = paddle.getRectangle().getBoundsInParent();
-        // todo cleanup the following mess once the stuck issue is resolved
-        if (paddleBounds.intersects(ballBounds)) {
-            ball.reverseYVelocity();
+        // Check for intersections with the paddle
+        // todo perhaps check for top and bottom collisions? That would be a force tho
+        if (paddleBounds.intersects(ballBounds)) ball.reverseYVelocity();
+        // Check for intersections with sides of the window
+        if (ballBounds.getMaxX() > WIDTH) ball.makeXVelocityNegative();
+        if (ballBounds.getMinX() < 0) ball.makeXVelocityPositive();
+        if (ballBounds.getMinY() < 0) ball.makeYVelocityPositive();
+        else if (ballBounds.getMaxY() > HEIGHT) {
+            ball.makeYVelocityNegative();
+            if (++bottomScreenHitCounter >= BOTTOM_HITS_TO_LOSE) return GameState.LOST;
         }
-        if (ballBounds.getMaxX() > WIDTH || ballBounds.getMinX() < 0) {
-            ball.reverseXVelocity();
-        }
-        if (ballBounds.getMinY() < 0) {
-            ball.reverseYVelocity();
-        } else if (ballBounds.getMaxY() > HEIGHT) {
-            ball.reverseYVelocity();
-            if (++bottomScreenHitCounter >= BOTTOM_HITS_TO_LOSE) {
-                // todo game over (put anything else here?)
-                return GameState.LOST;
-            }
-        }
+        // Check for intersections with animals
         for (Iterator<Label> i = animalImages.iterator(); i.hasNext(); ) {
             final Label image = i.next();
             final Bounds imageBounds = image.getBoundsInParent();
             if (ballBounds.intersects(imageBounds)) {
-                ball.reverseYVelocity();
-                // todo increase ball speed here
-                getChildren().remove(image);
-                i.remove();
+                // ball.reverseYVelocity(); todo this is optional so just remove to make graphics smoother?
+                ball.makeFaster();
+                getChildren().remove(image); // remove from screen
+                i.remove(); // remove from linked list
             }
         }
-        // todo go over this function conceptually to make sure it does everything it should
-        if (animalImages.isEmpty()) return GameState.WON;
-        // todo check collisions with animals
-        // todo fix the "sticking" issue in Canvas discussions
-        // todo   perhaps by just moving the ball here until it is unstuck?
-        // while(ball intersecting edge or other object) moveBallInNewDir() // to get unstuck todo
+        if (animalImages.isEmpty()) return GameState.WON; // all animals have been "transported elsewhere"
         return GameState.ACTIVE;
     }
 }
