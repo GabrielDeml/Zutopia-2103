@@ -4,7 +4,6 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -84,50 +83,14 @@ public class GameImpl extends Pane implements Game {
         return this;
     }
 
-//    private void loadImages() {
-//        for (String n : ImagesToLoad) {
-//
-//            loadedImages.put(n, new LinkedList(Arrays.asList(imageLabel, image.getWidth(), image.getHeight())));
-//        }
-//    }
-//    /**
-//     * Display animals blocks
-//     *
-//     * @param animals is the list that we want to display
-//     * @param x       how many animals on the x axis
-//     */
-//    private void displayGridOfAnimals(LinkedList<String> animals, int x) {
-//        int distance_x = WIDTH / x;
-//        int yi = 0, xi = 0;
-//        for (String animal : animals) {
-//            final Image image = new Image(this.getClass().getResourceAsStream(animal + ".jpg"));
-//            Label imageLabel = new Label("", new ImageView(image));
-//            imageLabel.setLayoutX((image.getWidth() / 2) + (distance_x * xi));
-//            imageLabel.setLayoutY((image.getHeight() / 2) + (distance_y * yi));
-//            getChildren().add(imageLabel);
-//            loadedImages.add(imageLabel);
-//            if (xi++ == x) {
-//                xi = 0;
-//                yi++;
-//            }
-//        }
-//    }
-//    private LinkedList randomlyGenerateAListOfAnimals(int n) {
-//        LinkedList listOfImages = new LinkedList();
-//        Random random = new Random();
-//        for (int i = 0; i <= n; i++) {
-//            int randomInt = random.nextInt(ImagesToLoad.size());
-//            listOfImages.add(ImagesToLoad.get(randomInt));
-//        }
-//        return listOfImages;
-//    }
-
     /**
      * Removes all current animal images from the screen (if any) and fills screen with new images
      */
     private void resetAnimalImages() {
+        // Clear the screen and reset vars
         getChildren().removeAll(animalImages);
         animalImages = new LinkedList<>();
+        //For the number of animals that we want
         for (int i = 0; i < ANIMALS_TO_START; ++i) {
             // Load image from disk
             final String animalImageFilename = ANIMAL_IMAGES[i % ANIMAL_IMAGES.length];
@@ -139,6 +102,7 @@ public class GameImpl extends Pane implements Game {
             final double xPos = xFactor * WIDTH - (image.getWidth() / 2);
             // (i / ANIMALS_PER_ROW) finds the proper row to place the image in (due to integer division)
             final double yPos = (double) (i / ANIMALS_PER_ROW) * ANIMAL_IMAGE_Y_SEPARATION + (image.getHeight() / 2);
+            // Set x and y locations of the animal
             imageLabel.setLayoutX(xPos);
             imageLabel.setLayoutY(yPos);
             getChildren().add(imageLabel); // add image to pane
@@ -148,7 +112,6 @@ public class GameImpl extends Pane implements Game {
 
     /**
      * Restarts/starts the game
-     *
      * @param state the state of last game, if applicable (NEW if a new game)
      */
     private void restartGame(GameState state) {
@@ -194,7 +157,6 @@ public class GameImpl extends Pane implements Game {
         // Instantiate and start an AnimationTimer to update the component of the game.
         new AnimationTimer() {
             private long lastNanoTime = -1;
-
             public void handle(long currentNanoTime) {
                 if (lastNanoTime >= 0) {  // Necessary for first clock-tick.
                     GameState state;
@@ -215,7 +177,6 @@ public class GameImpl extends Pane implements Game {
     /**
      * Updates the state of the game at each timestep. In particular, this method should
      * move the ball, check if the ball collided with any of the animals, walls, or the paddle, etc.
-     *
      * @param deltaNanoTime how much time (in nanoseconds) has transpired since the last update
      * @return the current game state
      */
@@ -225,7 +186,6 @@ public class GameImpl extends Pane implements Game {
         final Bounds ballBounds = ball.getCircle().getBoundsInParent(),
                 paddleBounds = paddle.getRectangle().getBoundsInParent();
         // Check for intersections with the paddle
-        // todo perhaps check for top and bottom collisions? That would be a force tho
         if (paddleBounds.intersects(ballBounds)) ball.reverseYVelocity();
         // Check for intersections with sides of the window
         if (ballBounds.getMaxX() > WIDTH) ball.makeXVelocityNegative();
@@ -240,7 +200,6 @@ public class GameImpl extends Pane implements Game {
             final Label image = i.next();
             final Bounds imageBounds = image.getBoundsInParent();
             if (ballBounds.intersects(imageBounds)) {
-                // ball.reverseYVelocity(); todo this is optional so just remove to make graphics smoother?
                 ball.makeFaster();
                 getChildren().remove(image); // remove from screen
                 i.remove(); // remove from linked list
